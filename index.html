@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VibeRanT To-Do</title>
+  <style>
+    :root {
+      --bg: #f0f4f8;
+      --glass: rgba(255,255,255,0.65);
+      --glass-border: rgba(255,255,255,0.4);
+      --text: #2d3748;
+      --text-muted: #718096;
+      --accent: #9f7aea;
+      --accent-light: #e9d8fd;
+      --success: #68d391;
+      --danger: #fc8181;
+      --shadow: 0 8px 32px rgba(31,38,135,0.1);
+      --radius: 20px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    h1 {
+      text-align: center;
+      color: var(--text);
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+    }
+    .input-wrap {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    #taskInput {
+      flex: 1;
+      padding: 14px 18px;
+      border: none;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.7);
+      font-size: 1rem;
+      color: var(--text);
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    #taskInput:focus {
+      background: rgba(255,255,255,0.95);
+      box-shadow: 0 0 0 3px var(--accent-light);
+    }
+    #addBtn {
+      width: 50px;
+      height: 50px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #9f7aea, #b794f4);
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 15px rgba(159,122,234,0.3);
+    }
+    #addBtn:hover {
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 0 6px 20px rgba(159,122,234,0.4);
+    }
+    #addBtn:active { transform: scale(0.95); }
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    .filter-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.5);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .filter-btn.active {
+      background: var(--accent);
+      color: white;
+    }
+    .filter-btn:hover:not(.active) {
+      background: rgba(255,255,255,0.8);
+    }
+    .task-list { list-style: none; }
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      background: rgba(255,255,255,0.6);
+      border-radius: 14px;
+      transition: all 0.3s ease;
+      animation: slideIn 0.4s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .task-item:hover { background: rgba(255,255,255,0.85); }
+    .task-item.completed .task-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+    .checkbox {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+    .checkbox.checked {
+      background: var(--success);
+      border-color: var(--success);
+    }
+    .checkbox.checked::after {
+      content: '✓';
+      color: white;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .task-text {
+      flex: 1;
+      color: var(--text);
+      font-size: 0.95rem;
+      word-break: break-word;
+    }
+    .delete-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 50%;
+      background: var(--danger);
+      color: white;
+      font-size: 0.8rem;
+      cursor: pointer;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: all 0.3s ease;
+    }
+    .task-item:hover .delete-btn {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .delete-btn:hover { background: #e53e3e; transform: scale(1.1); }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state svg { width: 80px; height: 80px; margin-bottom: 16px; opacity: 0.5; }
+    .progress-wrap {
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.3);
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .progress-bar {
+      height: 10px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #9f7aea, #68d391);
+      border-radius: 10px;
+      transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      width: 0%;
+    }
+    #confettiCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confettiCanvas"></canvas>
+  <div class="container">
+    <h1>✨ VibeRanT To-Do</h1>
+    <p class="subtitle">Stay organized, stay productive</p>
+    <div class="input-wrap">
+      <input type="text" id="taskInput" placeholder="Add a new task..." autocomplete="off">
+      <button id="addBtn">+</button>
+    </div>
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="active">Active</button>
+      <button class="filter-btn" data-filter="completed">Completed</button>
+    </div>
+    <ul class="task-list" id="taskList"></ul>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      <p>No tasks yet. Add one above!</p>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Progress</span>
+        <span id="progressText">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const taskInput = document.getElementById('taskInput');
+    const addBtn = document.getElementById('addBtn');
+    const taskList = document.getElementById('taskList');
+    const emptyState = document.getElementById('emptyState');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    let tasks = JSON.parse(localStorage.getItem('viberant-tasks') || '[]');
+    let currentFilter = 'all';
+
+    function save() { localStorage.setItem('viberant-tasks', JSON.stringify(tasks)); }
+
+    function render() {
+      taskList.innerHTML = '';
+      let filtered = tasks;
+      if (currentFilter === 'active') filtered = tasks.filter(t => !t.completed);
+      else if (currentFilter === 'completed') filtered = tasks.filter(t => t.completed);
+
+      if (filtered.length === 0) {
+        emptyState.style.display = 'block';
+      } else {
+        emptyState.style.display = 'none';
+        filtered.forEach(task => {
+          const li = document.createElement('li');
+          li.className = 'task-item' + (task.completed ? ' completed' : '');
+          li.innerHTML = `
+            <div class="checkbox ${task.completed ? 'checked' : ''}" onclick="toggleTask(${task.id})"></div>
+            <span class="task-text">${escapeHtml(task.text)}</span>
+            <button class="delete-btn" onclick="deleteTask(${task.id})">×</button>
+          `;
+          taskList.appendChild(li);
+        });
+      }
+      updateProgress();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function addTask() {
+      const text = taskInput.value.trim();
+      if (!text) return;
+      tasks.push({ id: Date.now(), text, completed: false });
+      taskInput.value = '';
+      save(); render();
+    }
+
+    function toggleTask(id) {
+      const t = tasks.find(x => x.id === id);
+      if (t) { t.completed = !t.completed; save(); render(); }
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      save(); render();
+    }
+
+    function updateProgress() {
+      const total = tasks.length;
+      const done = tasks.filter(t => t.completed).length;
+      const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+      progressFill.style.width = pct + '%';
+      progressText.textContent = pct + '%';
+      if (pct === 100 && total > 0) triggerConfetti();
+    }
+
+    addBtn.addEventListener('click', addTask);
+    taskInput.addEventListener('keypress', e => { if (e.key === 'Enter') addTask(); });
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        render();
+      });
+    });
+
+    // Confetti
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize); resize();
+
+    function triggerConfetti() {
+      for (let i = 0; i < 100; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: -10,
+          vx: (Math.random() - 0.5) * 6,
+          vy: Math.random() * 4 + 2,
+          color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+          size: Math.random() * 6 + 2,
+          life: 120
+        });
+      }
+      animateConfetti();
+    }
+
+    function animateConfetti() {
+      if (particles.length === 0) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.life--;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      });
+      particles = particles.filter(p => p.life > 0);
+      if (particles.length > 0) requestAnimationFrame(animateConfetti);
+      else ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    render();
+  </script>
+</body>
+</html>
